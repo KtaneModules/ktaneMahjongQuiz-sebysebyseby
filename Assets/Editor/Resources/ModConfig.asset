@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 615501dbe4f3fe94fbf4b564abb10237, type: 3}
+  m_Name: ModConfig
+  m_EditorClassIdentifier: 
+  id: MahjongQuiz
+  title: Mahjong Quiz
+  author: sebysebyseby
+  description: 'Find the waits (if any) to a randomly generated mahjong hand.
+
+
+    Comes in three flavours:
+
+    - Easy: Relatively simple hand shapes, good for learning the basics of spotting
+    waits
+
+    - Hard: Mostly difficult hand shapes, and you are no longer guaranteed to have
+    at least one wait. A formidable challenge
+
+    - Scrambled: '
+  version: 1.0
+  outputFolder: build
+  previewImage: {fileID: 2800000, guid: 31584e4ef023b79408fcc51c745112b7, type: 3}
