@@ -14,18 +14,18 @@ MonoBehaviour:
   id: MahjongQuiz
   title: Mahjong Quiz
   author: sebysebyseby
-  description: 'Find the waits (if any) to a randomly generated mahjong hand.
-
-
-    Comes in three flavours:
-
-    - Easy: Relatively simple hand shapes, good for learning the basics of spotting
-    waits
-
-    - Hard: Mostly difficult hand shapes, and you are no longer guaranteed to have
-    at least one wait. A formidable challenge
-
-    - Scrambled: '
+  description: "Find the waits (if any) to a randomly generated mahjong hand.\n\nComes
+    in three separate modules:\n- Easy (green background): Relatively simple hand
+    shapes, good for learning the basics of spotting waits.\n- Hard (blue background):
+    Mostly difficult hand shapes, and you are no longer guaranteed to have at least
+    one wait. A formidable challenge.\n- Scrambled (red background): The ultimate
+    challenge. Difficult hand shapes that do not come sorted.\n\n\n[url=http://ktane.timwi.de/PDF/Mahjong%20Quiz%20Easy.pdf]Manual
+    PDF - Easy[/url]\r\n[url=http://ktane.timwi.de/PDF/Mahjong%20Quiz%20Hard.pdf]Manual
+    PDF - Hard[/url]\n\r[url=http://ktane.timwi.de/PDF/Mahjong%20Quiz%20Scrambled.pdf]Manual
+    PDF - Scrambled[/url]\r\n[url=http://ktane.timwi.de/HTML/Mahjong%20Quiz%20Easy.html]Manual
+    HTML - Easy[/url]\n[url=http://ktane.timwi.de/HTML/Mahjong%20Quiz%20Hard.html]Manual
+    HTML - Hard[/url]\n[url=http://ktane.timwi.de/HTML/Mahjong%20Quiz%20Scrambled.html]Manual
+    HTML - Scrambled[/url]"
   version: 1.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 31584e4ef023b79408fcc51c745112b7, type: 3}

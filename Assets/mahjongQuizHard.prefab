@@ -793,7 +793,7 @@ GameObject:
   - component: {fileID: 114631504072633662}
   - component: {fileID: 114268536614891716}
   m_Layer: 0
-  m_Name: mahjongQuizHard
+  m_Name: MahjongQuizHard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7717,7 +7717,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - GUI/Text Shader
+  - GUI/KT 3D Text Diffuse
 --- !u!114 &114537563971239978
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -8771,7 +8771,7 @@ MonoBehaviour:
   m_Script: {fileID: -119419473, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ModuleType: mahjongQuizHard
+  ModuleType: MahjongQuizHard
   ModuleDisplayName: Mahjong Quiz Hard
   RequiresTimerVisibility: 0
 --- !u!114 &114936941069292172

@@ -1428,7 +1428,7 @@ GameObject:
   - component: {fileID: 114551934024500150}
   - component: {fileID: 114823523579732876}
   m_Layer: 0
-  m_Name: mahjongQuizEasy
+  m_Name: MahjongQuizEasy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7090,7 +7090,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - GUI/Text Shader
+  - GUI/KT 3D Text Diffuse
 --- !u!114 &114419812852325010
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -8003,7 +8003,7 @@ MonoBehaviour:
   m_Script: {fileID: -119419473, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ModuleType: mahjongQuizEasy
+  ModuleType: MahjongQuizEasy
   ModuleDisplayName: Mahjong Quiz Easy
   RequiresTimerVisibility: 0
 --- !u!114 &114796832927517098
