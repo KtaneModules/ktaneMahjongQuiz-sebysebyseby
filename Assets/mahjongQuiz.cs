@@ -1351,13 +1351,13 @@ public class mahjongQuiz : MonoBehaviour
             MatchCollection matches = tilesRegex.Matches(command);
             if (matches.Count == 1) {
                 var groups = matches[0].Groups;
-                if (groups.Count == 2 && groups[1] != null) {
-                    var tiles = splitStringIntoPairs(groups[1].ToString());
+                if (groups.Count == 3 && groups[2] != null) {
+                    var tiles = splitStringIntoPairs(groups[2].ToString());
                     foreach (var tileId in tiles) {
                         PressInputTile(allTiles.Find(x => x.id == tileId).textureId);
                         yield return null;
                     }
-                    if (groups[0].ToString() == "submit") {
+                    if (groups[1].ToString() == "submit") {
                         PressSubmitButton();
                         yield return null;
                     }
@@ -1371,8 +1371,20 @@ public class mahjongQuiz : MonoBehaviour
         if (tilesString.Length % 2 != 0) throw new System.Exception("Tiles string: '" + tilesString + "' should have be an even amount. Likely a regex bug.");
         int tileCount = tilesString.Length / 2;
         for (int i = 0; i < tileCount; i++) {
-            tiles.Add(tilesString.Substring(i, 2));
+            tiles.Add(tilesString.Substring(i*2, 2));
         }
         return tiles;
+    }
+    
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        PressClearButton();
+        yield return null;
+        foreach (var tile in solutionTiles) {
+            PressInputTile(tile.textureId);
+            yield return null;
+        }
+        PressSubmitButton();
+        yield return null;
     }
 }
