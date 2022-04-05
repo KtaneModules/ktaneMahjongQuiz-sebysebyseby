@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Collections;
@@ -12,7 +12,9 @@ public class mahjongQuiz : MonoBehaviour
     public int difficulty;
     private string difficultyName;
 
-    static int moduleIdCounter = 1;
+    static int easyIdCounter = 1;
+    static int hardIdCounter = 1;
+    static int scrambledIdCounter = 1;
     int moduleId;
     bool isSolved;
     private bool moduleSolved;
@@ -37,6 +39,7 @@ public class mahjongQuiz : MonoBehaviour
 
     KMAudio.KMAudioRef audioRef;
     Hand moduleHand;
+    Hand moduleHandCopy;
 
 	List<Tile> solutionTiles;
 
@@ -47,33 +50,42 @@ public class mahjongQuiz : MonoBehaviour
 
     void Init()
     {
-        if (difficulty != 1 && difficulty != 2 && difficulty != 3) throw new System.Exception("Difficulty can only be 1/2/3");
-        moduleId = moduleIdCounter++;
         isSolved = false;
-        if (difficulty == 1) difficultyName = "Easy";
-        if (difficulty == 2) difficultyName = "Hard";
-        if (difficulty == 3) difficultyName = "Scrambled";
+        if (difficulty == 1) {
+            moduleId = easyIdCounter++;
+            difficultyName = "Easy";
+        } else if (difficulty == 2) {
+            moduleId = hardIdCounter++;
+            difficultyName = "Hard";
+        } else if (difficulty == 3) {
+            moduleId = scrambledIdCounter++;
+            difficultyName = "Scrambled";
+        } else {
+            throw new System.Exception("Difficulty can only be 1/2/3");
+        }
 
 		// create hand and determine solution
         if (difficulty == 1) moduleHand = buildLevelOneHand();
         if (difficulty == 2) moduleHand = buildLevelTwoHand();
         if (difficulty == 3) moduleHand = buildLevelTwoHand();
 		moduleHand.tiles.Sort();
+        moduleHandCopy = new Hand(new List<Tile> (moduleHand.tiles)); // store a copy of the module so it can be printed after the scrambled hand
         CompleteSolution solution = getTenpaiTiles(moduleHand);
         solutionTiles = solution.getSolutionTiles();
 
-        // log hand, solution, and explanations
-        Debug.LogFormat("[Mahjong Quiz {1} #{0}] Given hand: {2}", moduleId, difficultyName, moduleHand.logHand());
-        Debug.LogFormat("[Mahjong Quiz {1} #{0}] Solution: {2}", moduleId, difficultyName, solution.logSolutionTiles());
-        foreach (var possibleSolution in solution.possibleSolutions) {
-            possibleSolution.sortSolutionMelds();
-            Debug.LogFormat("[Mahjong Quiz {1} #{0}] Explanation: {2}", moduleId, difficultyName, possibleSolution.logExplanation());
-        }
 
         // scramble hand and log for difficulty 3
 		if (difficulty == 3) {
             moduleHand.shuffle();
             Debug.LogFormat("[Mahjong Quiz {1} #{0}] Scrambled hand: {2}", moduleId, difficultyName, moduleHand.logHand());
+        }
+
+        // log hand, solution, and explanations
+        Debug.LogFormat("[Mahjong Quiz {1} #{0}] Given hand: {2}", moduleId, difficultyName, moduleHandCopy.logHand());
+        Debug.LogFormat("[Mahjong Quiz {1} #{0}] Solution: {2}", moduleId, difficultyName, solution.logSolutionTiles());
+        foreach (var possibleSolution in solution.possibleSolutions) {
+            possibleSolution.sortSolutionMelds();
+            Debug.LogFormat("[Mahjong Quiz {1} #{0}] Explanation: {2}", moduleId, difficultyName, possibleSolution.logExplanation());
         }
 
 		// set textures for input buttons
@@ -858,7 +870,6 @@ public class mahjongQuiz : MonoBehaviour
 
     public Hand buildLevelThreeHand() {
         int random = Random.Range(0, 100);
-        Debug.Log("level 3 random number: " + random);
         if (random < 10) return buildHardHand();
         else return buildExpertHand();
     }
@@ -1083,12 +1094,8 @@ public class mahjongQuiz : MonoBehaviour
     }
 
     public void addHardMelds(Hand hand) {
-        Debug.Log("difficulty: " + difficulty);
         if (difficulty == 3) {
             Suit suit = hand.tiles[0].suit;
-            Debug.Log("tile count: " + hand.tiles.Count);
-            Debug.Log("tile id: " + hand.tiles[0].id);
-            Debug.Log("suit: " + suit);
             hand.addMeld(proximity: 1, suit: suit);
         } else {
             hand.addMeld(proximity: 1);
@@ -1326,63 +1333,46 @@ public class mahjongQuiz : MonoBehaviour
 	}
 
     #pragma warning disable 414
-    private string TwitchHelpMessage = "Cycle the flags with !{0} cycle. Move using !{0} left/right. " + 
-        "Set to index 3 with !{0} set 3. Set to Canada with !{0} set Canada. Submit the current flag with !{0} submit. " +
-        "Submit Canada with !{0} submit Canada.";
+    private string TwitchHelpMessage = "Toggle tiles with !{0} toggle 1p 5s 8s. Submit using !{0} submit. Clear selection using !{0} clear." + 
+        "Character tiles are [1-9]m, circle tiles are [1-9]p, bamboo tiles are [1-9]s, and honor tiles (east/south/west/north/white/green/red) are [1-7]z" + 
+        "You may also combine toggle and submit commands like so: !{0} submit 1m 3s 6s.";
     #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command) {
-        command = command.ToUpperInvariant().Trim();
-
-        if (command == "SUBMIT") {
+        command = command.ToLower().Trim().Replace(" ", "");
+        if (Regex.IsMatch(command, @"^submit$")) {
             PressSubmitButton();
             yield return null;
+        } else if (Regex.IsMatch(command, @"^clear$")) {
+            PressClearButton();
+            yield return null;
+        } else {
+            Regex tilesRegex = new Regex(@"(submit|toggle)((?:[1-9][mps]|[1-7]z)+)$");
+            MatchCollection matches = tilesRegex.Matches(command);
+            if (matches.Count == 1) {
+                var groups = matches[0].Groups;
+                if (groups.Count == 2 && groups[1] != null) {
+                    var tiles = splitStringIntoPairs(groups[1].ToString());
+                    foreach (var tileId in tiles) {
+                        PressInputTile(allTiles.Find(x => x.id == tileId).textureId);
+                        yield return null;
+                    }
+                    if (groups[0].ToString() == "submit") {
+                        PressSubmitButton();
+                        yield return null;
+                    }
+                }
+            }            
         }
-        
-        // else if (command == "LEFT") {
-        //     onLeft();
-        //     yield return null;
-        // }
-        
-        // characters 1c/1m
+    }
 
-        // balls 1b/1d
-
-        // else if (command == "RIGHT") {
-        //     onRight();
-        //     yield return null;
-        // }
-        
-        // else if (command == "CYCLE")
-        //     for (int i = 0; i < 7; i++) {
-        //         yield return new WaitForSeconds(0.75f);
-        //         onRight();
-        //         yield return new WaitForSeconds(0.75f);
-        //     }
-
-        // else if (command.Length > 4 && command.Substring(0, 4) == "SET " || command.Length > 7 && command.Substring(0, 7) == "SUBMIT ") {
-        //     string args = command[1] == 'E' ? command.Substring(4) : command.Substring(7);
-
-        //     if (args.Length == 1 && "1234567".Contains(args)) {
-        //         int target = int.Parse(args);
-
-        //         while (target != position + 1) {
-        //             onRight();
-        //             yield return new WaitForSeconds(0.1f);
-        //         }
-        //     }
-            
-        //     else if (countryInfo.Find(x => x.CountryName.ToUpperInvariant() == args) != null) {
-        //         int cycle = 0;
-
-        //         while (countries[position].CountryName.ToUpperInvariant() != args && cycle++ < 7) {
-        //             onRight();
-        //             yield return new WaitForSeconds(0.1f);
-        //         }
-        //     }
-
-        //     if (command[1] == 'U')
-        //         onSubmit();
-        // }
+    private List<string> splitStringIntoPairs(string tilesString) {
+        var tiles = new List<string>();
+        if (tilesString.Length % 2 != 0) throw new System.Exception("Tiles string: '" + tilesString + "' should have be an even amount. Likely a regex bug.");
+        int tileCount = tilesString.Length / 2;
+        for (int i = 0; i < tileCount; i++) {
+            tiles.Add(tilesString.Substring(i, 2));
+        }
+        return tiles;
     }
 }
