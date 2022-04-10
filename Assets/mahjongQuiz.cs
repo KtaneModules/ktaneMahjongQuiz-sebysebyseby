@@ -597,7 +597,7 @@ public class mahjongQuiz : MonoBehaviour
 
         public List<Tile> removeAndReturnChi() {
             List<Tile> chi = new List<Tile>();
-            if (this.tiles.Count < 3) return chi; // not enough tiles to remove pair
+            if (this.tiles.Count < 3) return chi; // not enough tiles to remove chi
             for (int i = 0; i < this.tiles.Count; i++) {
                 var tile = this.tiles[i];
                 if (tile.suit == Suit.Honors || tile.value >= 8) continue; // honor tile or 8/9 value tile can't be start of a chi
@@ -637,7 +637,6 @@ public class mahjongQuiz : MonoBehaviour
 			}
 		}
 
-        //
         public void scrambleRandomTile() {
             if (tiles.Count < 1) return;
             tiles.Sort();
@@ -1135,7 +1134,7 @@ public class mahjongQuiz : MonoBehaviour
         "2222333344", // (12345)
         "2222333345", // (1245)
         "2222333445", // (1346)
-        "2222334455", // (25) // not interesting?
+        "2222334455", // (25)
         "2222344455", // (145)
         "2223333445", // (23456)
         "2223333455", // (25)
@@ -1291,14 +1290,6 @@ public class mahjongQuiz : MonoBehaviour
         return purityHand; // this should theoretically never get reached
     }
 
-	public static Hand buildTemplateHand() {
-		var templateHand = buildHandFromTemplate("11123");
-		templateHand.addPair(proximity: 2);
-		templateHand.addMeld(proximity: 2);
-		templateHand.addMeld(proximity: 2);
-		return templateHand;
-	}
-
 	public static Hand buildKokushiHand(int waits) {
 		if (waits == 0) {
 			List<Tile> tiles = new List<Tile>(allTerminals);
@@ -1341,12 +1332,10 @@ public class mahjongQuiz : MonoBehaviour
     private IEnumerator ProcessTwitchCommand(string command) {
         command = command.ToLower().Trim().Replace(" ", "");
         if (Regex.IsMatch(command, @"^submit$")) {
-            // PressSubmitButton();
             confirmButton.OnInteract();
             yield return new WaitForSeconds(.1f);
             yield return null;
         } else if (Regex.IsMatch(command, @"^clear$")) {
-            // PressClearButton();
             clearButton.OnInteract();
             yield return new WaitForSeconds(.1f);
             yield return null;
@@ -1358,13 +1347,11 @@ public class mahjongQuiz : MonoBehaviour
                 if (groups.Count == 3 && groups[2] != null) {
                     var tiles = splitStringIntoPairs(groups[2].ToString());
                     foreach (var tileId in tiles) {
-                        // PressInputTile(allTiles.Find(x => x.id == tileId).textureId);
                         tileButtons[allTiles.Find(x => x.id == tileId).textureId].OnInteract();
                         yield return new WaitForSeconds(.1f);
                         yield return null;
                     }
                     if (groups[1].ToString() == "submit") {
-                        // PressSubmitButton();
                         confirmButton.OnInteract();
                         yield return new WaitForSeconds(.1f);
                         yield return null;
@@ -1406,12 +1393,10 @@ public class mahjongQuiz : MonoBehaviour
         var resetThenToggle = 1 + totalSolutionTiles;
         var toggleOnly = missingSelectedTileCount + wronglySelectedTileCount;
         if (resetThenToggle < toggleOnly) {
-            // PressClearButton();
             clearButton.OnInteract();
             yield return new WaitForSeconds(.1f);
             yield return null;
             foreach (var tile in solutionTiles) {
-                // PressInputTile(tile.textureId);
                 tileButtons[tile.textureId].OnInteract();
                 yield return new WaitForSeconds(.1f);
                 yield return null;
@@ -1422,56 +1407,14 @@ public class mahjongQuiz : MonoBehaviour
                 var tileIsSelected = selectedTiles[i];
                 var tileShouldBeSelected = (bool) solutionTiles.Contains(tile);
                 if ((!tileIsSelected && tileShouldBeSelected) || (tileIsSelected && !tileShouldBeSelected)) {
-                    // PressInputTile(tile.textureId);
                     tileButtons[i].OnInteract();
                     yield return new WaitForSeconds(.1f);
                     yield return null;
                 }
             }
         }
-        // PressSubmitButton();
         confirmButton.OnInteract();
         yield return new WaitForSeconds(.1f);
         yield return null;
-    }
-
-    public void testFunction () {
-        var correctlySelectedTileCount = 0;
-        var wronglySelectedTileCount = 0;
-        var missingSelectedTileCount = 0;
-        var totalSolutionTiles = solutionTiles.Count;
-		for (int i = 0; i < 34; i++) {
-            var tileIsSelected = selectedTiles[i];
-            var tileShouldBeSelected = (bool) solutionTiles.Contains(allTiles.Find(t => t.textureId == i));
-            if (tileIsSelected) {
-                if (tileShouldBeSelected) {
-                    correctlySelectedTileCount++;
-                } else{
-                    wronglySelectedTileCount++;
-                }
-            } else {
-                if (tileShouldBeSelected) missingSelectedTileCount++;
-            }
-		}
-        var resetThenToggle = 1 + totalSolutionTiles;
-        var toggleOnly = missingSelectedTileCount + wronglySelectedTileCount;
-        
-        Debug.Log("DEBUG missing " + missingSelectedTileCount + " tiles, overclicked " + wronglySelectedTileCount + "tiles. Total tile select count should be: " + totalSolutionTiles);
-        if (resetThenToggle < toggleOnly) {
-            Debug.Log("pressing clear");
-            foreach (var tile in solutionTiles) {
-                Debug.Log("pressing tile: " + tile.id);
-            }
-        } else {
-            for (int i = 0; i < 34; i++) {
-                var tile = allTiles.Find(t => t.textureId == i);
-                var tileIsSelected = selectedTiles[i];
-                var tileShouldBeSelected = (bool) solutionTiles.Contains(tile);
-                if ((!tileIsSelected && tileShouldBeSelected) || (tileIsSelected && !tileShouldBeSelected)) {
-                    Debug.Log("pressing tile: " + tile.id);
-                }
-            }
-        }
-        Debug.Log("pressing submit");
     }
 }
