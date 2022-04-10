@@ -1333,18 +1333,22 @@ public class mahjongQuiz : MonoBehaviour
 	}
 
     #pragma warning disable 414
-    private string TwitchHelpMessage = "Toggle tiles with !{0} toggle 1p 5s 8s. Submit using !{0} submit. Clear selection using !{0} clear." + 
-        "Character tiles are [1-9]m, circle tiles are [1-9]p, bamboo tiles are [1-9]s, and honor tiles (east/south/west/north/white/green/red) are [1-7]z" + 
+    private string TwitchHelpMessage = "Toggle tiles with !{0} toggle 1p 5s 8s. Submit using !{0} submit. Clear selection using !{0} clear. " + 
+        "Character tiles are [1-9]m, circle tiles are [1-9]p, bamboo tiles are [1-9]s, and honor tiles (east/south/west/north/white/green/red) are [1-7]z. " + 
         "You may also combine toggle and submit commands like so: !{0} submit 1m 3s 6s.";
     #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command) {
         command = command.ToLower().Trim().Replace(" ", "");
         if (Regex.IsMatch(command, @"^submit$")) {
-            PressSubmitButton();
+            // PressSubmitButton();
+            confirmButton.OnInteract();
+            yield return new WaitForSeconds(.1f);
             yield return null;
         } else if (Regex.IsMatch(command, @"^clear$")) {
-            PressClearButton();
+            // PressClearButton();
+            clearButton.OnInteract();
+            yield return new WaitForSeconds(.1f);
             yield return null;
         } else {
             Regex tilesRegex = new Regex(@"(submit|toggle)((?:[1-9][mps]|[1-7]z)+)$");
@@ -1354,11 +1358,15 @@ public class mahjongQuiz : MonoBehaviour
                 if (groups.Count == 3 && groups[2] != null) {
                     var tiles = splitStringIntoPairs(groups[2].ToString());
                     foreach (var tileId in tiles) {
-                        PressInputTile(allTiles.Find(x => x.id == tileId).textureId);
+                        // PressInputTile(allTiles.Find(x => x.id == tileId).textureId);
+                        tileButtons[allTiles.Find(x => x.id == tileId).textureId].OnInteract();
+                        yield return new WaitForSeconds(.1f);
                         yield return null;
                     }
                     if (groups[1].ToString() == "submit") {
-                        PressSubmitButton();
+                        // PressSubmitButton();
+                        confirmButton.OnInteract();
+                        yield return new WaitForSeconds(.1f);
                         yield return null;
                     }
                 }
@@ -1368,7 +1376,7 @@ public class mahjongQuiz : MonoBehaviour
 
     private List<string> splitStringIntoPairs(string tilesString) {
         var tiles = new List<string>();
-        if (tilesString.Length % 2 != 0) throw new System.Exception("Tiles string: '" + tilesString + "' should have be an even amount. Likely a regex bug.");
+        if (tilesString.Length % 2 != 0) throw new System.Exception("Tiles string: '" + tilesString + "' should have been an even amount. Likely a regex bug.");
         int tileCount = tilesString.Length / 2;
         for (int i = 0; i < tileCount; i++) {
             tiles.Add(tilesString.Substring(i*2, 2));
@@ -1378,13 +1386,92 @@ public class mahjongQuiz : MonoBehaviour
     
     IEnumerator TwitchHandleForcedSolve()
     {
-        PressClearButton();
-        yield return null;
-        foreach (var tile in solutionTiles) {
-            PressInputTile(tile.textureId);
+        var correctlySelectedTileCount = 0;
+        var wronglySelectedTileCount = 0;
+        var missingSelectedTileCount = 0;
+        var totalSolutionTiles = solutionTiles.Count;
+		for (int i = 0; i < 34; i++) {
+            var tileIsSelected = selectedTiles[i];
+            var tileShouldBeSelected = (bool) solutionTiles.Contains(allTiles.Find(t => t.textureId == i));
+            if (tileIsSelected) {
+                if (tileShouldBeSelected) {
+                    correctlySelectedTileCount++;
+                } else{
+                    wronglySelectedTileCount++;
+                }
+            } else {
+                if (tileShouldBeSelected) missingSelectedTileCount++;
+            }
+		}
+        var resetThenToggle = 1 + totalSolutionTiles;
+        var toggleOnly = missingSelectedTileCount + wronglySelectedTileCount;
+        if (resetThenToggle < toggleOnly) {
+            // PressClearButton();
+            clearButton.OnInteract();
+            yield return new WaitForSeconds(.1f);
             yield return null;
+            foreach (var tile in solutionTiles) {
+                // PressInputTile(tile.textureId);
+                tileButtons[tile.textureId].OnInteract();
+                yield return new WaitForSeconds(.1f);
+                yield return null;
+            }
+        } else {
+            for (int i = 0; i < 34; i++) {
+                var tile = allTiles.Find(t => t.textureId == i);
+                var tileIsSelected = selectedTiles[i];
+                var tileShouldBeSelected = (bool) solutionTiles.Contains(tile);
+                if ((!tileIsSelected && tileShouldBeSelected) || (tileIsSelected && !tileShouldBeSelected)) {
+                    // PressInputTile(tile.textureId);
+                    tileButtons[i].OnInteract();
+                    yield return new WaitForSeconds(.1f);
+                    yield return null;
+                }
+            }
         }
-        PressSubmitButton();
+        // PressSubmitButton();
+        confirmButton.OnInteract();
+        yield return new WaitForSeconds(.1f);
         yield return null;
+    }
+
+    public void testFunction () {
+        var correctlySelectedTileCount = 0;
+        var wronglySelectedTileCount = 0;
+        var missingSelectedTileCount = 0;
+        var totalSolutionTiles = solutionTiles.Count;
+		for (int i = 0; i < 34; i++) {
+            var tileIsSelected = selectedTiles[i];
+            var tileShouldBeSelected = (bool) solutionTiles.Contains(allTiles.Find(t => t.textureId == i));
+            if (tileIsSelected) {
+                if (tileShouldBeSelected) {
+                    correctlySelectedTileCount++;
+                } else{
+                    wronglySelectedTileCount++;
+                }
+            } else {
+                if (tileShouldBeSelected) missingSelectedTileCount++;
+            }
+		}
+        var resetThenToggle = 1 + totalSolutionTiles;
+        var toggleOnly = missingSelectedTileCount + wronglySelectedTileCount;
+        
+        Debug.Log("DEBUG missing " + missingSelectedTileCount + " tiles, overclicked " + wronglySelectedTileCount + "tiles. Total tile select count should be: " + totalSolutionTiles);
+        if (resetThenToggle < toggleOnly) {
+            Debug.Log("pressing clear");
+            foreach (var tile in solutionTiles) {
+                Debug.Log("pressing tile: " + tile.id);
+            }
+        } else {
+            for (int i = 0; i < 34; i++) {
+                var tile = allTiles.Find(t => t.textureId == i);
+                var tileIsSelected = selectedTiles[i];
+                var tileShouldBeSelected = (bool) solutionTiles.Contains(tile);
+                if ((!tileIsSelected && tileShouldBeSelected) || (tileIsSelected && !tileShouldBeSelected)) {
+                    Debug.Log("pressing tile: " + tile.id);
+                }
+            }
+        }
+        Debug.Log("pressing submit");
     }
 }
