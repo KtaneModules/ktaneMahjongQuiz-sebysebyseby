@@ -393,12 +393,12 @@ public class mahjongQuiz : MonoBehaviour
         }
 
         // add a random meld to the hand. Each meld has an equal chance of being selected.
-        public void addMeld(Tile givenTile = null, int proximity = 0, Suit? suit = null) {
+        public void addMeld(Tile givenTile = null, int proximity = 0, Suit? suit = null, List<Tile> usableTiles = null) {
             var looking = true;
             while (looking) {
                 var possibleMelds = new List<List<Tile>>();
-                var usableTiles = allTiles;
-                if (proximity == 1 || proximity == 2 || proximity == 3) usableTiles = getUnrelatedTiles(proximity, suit);
+                if (usableTiles == null) usableTiles = new List<Tile>(allTiles);
+                if (proximity == 1 || proximity == 2 || proximity == 3) usableTiles = getUnrelatedTiles(proximity, suit, usableTiles);
 				if (suit != null) usableTiles = usableTiles.Where(t => t.suit == suit).ToList();
                 var randomTile = (givenTile == null) ? selectRandomTile(usableTiles) : givenTile;
                 var numTiles = this.numberOfGivenTileInHand(randomTile);
@@ -433,12 +433,12 @@ public class mahjongQuiz : MonoBehaviour
         }
 
         // add a random iippeiko to the hand. Each meld has an equal chance of being selected.
-        public void addIippeiko(Tile givenTile = null, int proximity = 0, Suit? suit = null) {
+        public void addIippeiko(Tile givenTile = null, int proximity = 0, Suit? suit = null, List<Tile> usableTiles = null) {
             var looking = true;
             while (looking) {
                 var possibleMelds = new List<List<Tile>>();
-                var usableTiles = allTiles;
-                if (proximity == 1 || proximity == 2 || proximity == 3) usableTiles = getUnrelatedTiles(proximity, suit);
+                if (usableTiles == null) usableTiles = new List<Tile>(allTiles);
+                if (proximity == 1 || proximity == 2 || proximity == 3) usableTiles = getUnrelatedTiles(proximity, suit, usableTiles);
 				if (suit != null) usableTiles = usableTiles.Where(t => t.suit == suit).ToList();
                 var randomTile = (givenTile == null) ? selectRandomTile(usableTiles) : givenTile;
                 var numTiles = this.numberOfGivenTileInHand(randomTile);
@@ -466,11 +466,11 @@ public class mahjongQuiz : MonoBehaviour
             }
         }
 
-        public void addPair(int proximity = 0, Suit? suit = null) {
+        public void addPair(int proximity = 0, Suit? suit = null, List<Tile> usableTiles = null) {
             var looking = true;
-            var usableTiles = allTiles;
-			if (suit != null) usableTiles = allTiles.Where(t => t.suit == suit).ToList();
-            if (proximity == 1 || proximity == 2 || proximity == 3) usableTiles = getUnrelatedTiles(proximity, suit);
+            if (usableTiles == null) usableTiles = new List<Tile>(allTiles);
+			if (suit != null) usableTiles = usableTiles.Where(t => t.suit == suit).ToList();
+            if (proximity == 1 || proximity == 2 || proximity == 3) usableTiles = getUnrelatedTiles(proximity, suit, usableTiles);
             while (looking) {
                 var randomTile = selectRandomTile(usableTiles);
                 var numTiles = this.numberOfGivenTileInHand(randomTile);
@@ -530,11 +530,11 @@ public class mahjongQuiz : MonoBehaviour
             }
         }
 
-        public List<Tile> getUnrelatedTiles(int proximity, Suit? suit = null) {
-			List<Tile> tiles = allTiles;
-			if (suit != null) tiles = tiles.Where(t => t.suit == suit).ToList();
+        public List<Tile> getUnrelatedTiles(int proximity, Suit? suit = null, List<Tile> usableTiles = null) {
+            if (usableTiles == null) usableTiles = new List<Tile>(allTiles);
+			if (suit != null) usableTiles = usableTiles.Where(t => t.suit == suit).ToList();
             if (proximity == 1) {
-                return allTiles.Except(this.tiles).ToList();
+                return usableTiles.Except(this.tiles).ToList();
             }
             if (proximity == 2) {
                 var relatedTiles = new List<Tile>();
@@ -545,7 +545,7 @@ public class mahjongQuiz : MonoBehaviour
                     var upTile = tile.getTileAbove();
                     if (upTile != null) relatedTiles.Add(upTile);
                 }
-                return allTiles.Except(relatedTiles).ToList();
+                return usableTiles.Except(relatedTiles).ToList();
             }
             if (proximity == 3) {
                 var relatedTiles = new List<Tile>();
@@ -564,7 +564,7 @@ public class mahjongQuiz : MonoBehaviour
                         if (moreUpTile != null) relatedTiles.Add(moreUpTile);
                     }
                 }
-                return allTiles.Except(relatedTiles).ToList();
+                return usableTiles.Except(relatedTiles).ToList();
             }
             else throw new System.Exception("Should not use proximity > 4");
         }
@@ -830,6 +830,12 @@ public class mahjongQuiz : MonoBehaviour
         m1, m9, p1, p9, s1, s9,
         z1, z2, z3, z4, z5, z6, z7
     };
+    public static List<Tile> allGreenTiles = new List<Tile> {
+        s2, s3, s4, s6, s8, z6
+    };
+    public static List<Tile> allHonorTiles = new List<Tile> {
+        z1, z2, z3, z4, z5, z6, z7
+    };
 
     public static List<List<Tile>> allChis = new List<List<Tile>> {
         new List<Tile> { m1, m2, m3 },
@@ -863,39 +869,57 @@ public class mahjongQuiz : MonoBehaviour
 
     public Hand buildLevelTwoHand() {
         int random = Random.Range(0, 100);
-        if (random < 20) return buildHardHand();
+        if (random < 5) return buildSpecialHand();
+        if (random < 25) return buildHardHand();
         else return buildExpertHand();
     }
 
     public Hand buildLevelThreeHand() {
         int random = Random.Range(0, 100);
-        if (random < 10) return buildHardHand();
+        if (random < 5) return buildSpecialHand();
+        if (random < 15) return buildHardHand();
         else return buildExpertHand();
     }
 
     public static Hand buildEasyHand() {
         int random = Random.Range(0, 100);
-        if (random < 18) { // shanpon wait
+        if (random < 20) { // shanpon wait (with 15% all honors chance)
+            int yakumanChance = Random.Range(0, 100);
             var easyHand = new Hand(new List<Tile>());
-            easyHand.addPair();
-            easyHand.addPair(proximity: 1);
-            easyHand.addMeld(proximity: 2);
-            easyHand.addMeld(proximity: 2);
-            easyHand.addMeld(proximity: 2);
-            easyHand.tiles.Sort();
+            if (yakumanChance < 15) {
+                easyHand.addPair(usableTiles: allHonorTiles);
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+            } else {
+                easyHand.addPair();
+                easyHand.addPair(proximity: 1);
+                easyHand.addMeld(proximity: 2);
+                easyHand.addMeld(proximity: 2);
+                easyHand.addMeld(proximity: 2);
+            }
             return easyHand;
         }
-        if (random < 30) { // eye wait
+        if (random < 36) { // eye wait (with 15% all honors chance)
+            int yakumanChance = Random.Range(0, 100);
             var easyHand = new Hand(new List<Tile>());
-            easyHand.tiles.Add(selectRandomTile(allTiles));
-            easyHand.addMeld(proximity: 3);
-            easyHand.addMeld(proximity: 3);
-            easyHand.addMeld(proximity: 3);
-            easyHand.addMeld(proximity: 3);
-            easyHand.tiles.Sort();
+            if (yakumanChance < 15) {
+                easyHand.tiles.Add(selectRandomTile(allHonorTiles));
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addMeld(proximity: 1, usableTiles: allHonorTiles);
+            } else {
+                easyHand.tiles.Add(selectRandomTile(allTiles));
+                easyHand.addMeld(proximity: 3);
+                easyHand.addMeld(proximity: 3);
+                easyHand.addMeld(proximity: 3);
+                easyHand.addMeld(proximity: 3);
+            }
             return easyHand;
         }
-        if (random < 54) { // 2 sided sequence
+        if (random < 56) { // 2 sided sequence
             var easyHand = new Hand(new List<Tile>());
             easyHand.addTwoSidedWait();
             easyHand.addPair(proximity: 2);
@@ -904,18 +928,29 @@ public class mahjongQuiz : MonoBehaviour
             easyHand.addMeld(proximity: 2);
             return easyHand;
         }
-        if (random < 60) { // 1 sided unambiguous 7 pairs
+        if (random < 72) { // 1 sided unambiguous 7 pairs (with 15% all honors chance)
             var easyHand = new Hand(new List<Tile>());
-            easyHand.tiles.Add(selectRandomTile(allTiles));
-            easyHand.addPair(proximity: 1);
-            easyHand.addPair(proximity: 2);
-            easyHand.addPair(proximity: 2);
-            easyHand.addPair(proximity: 2);
-            easyHand.addPair(proximity: 2);
-            easyHand.addPair(proximity: 2);
+            int yakumanChance = Random.Range(0, 100);
+            if (yakumanChance < 15) {
+                easyHand.tiles.Add(selectRandomTile(allHonorTiles));
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+                easyHand.addPair(proximity: 1, usableTiles: allHonorTiles);
+            } else {
+                easyHand.tiles.Add(selectRandomTile(allTiles));
+                easyHand.addPair(proximity: 1);
+                easyHand.addPair(proximity: 2);
+                easyHand.addPair(proximity: 2);
+                easyHand.addPair(proximity: 2);
+                easyHand.addPair(proximity: 2);
+                easyHand.addPair(proximity: 2);
+            }
             return easyHand;
         }
-        if (random < 84) { // 1 sided middle wait
+        if (random < 86) { // 1 sided middle wait
             var easyHand = new Hand(new List<Tile>());
             easyHand.addMiddleWait();
             easyHand.addPair(proximity: 1);
@@ -943,27 +978,27 @@ public class mahjongQuiz : MonoBehaviour
             mediumHand.addMeld(proximity: 2);
 			return mediumHand;
 		}
-        if (random < 16) { // 22234 - 13
+        if (random < 14) { // 22234 - 12
             var mediumHand = buildHandFromTemplate("22234");
             mediumHand.addPair(proximity: 2);
             mediumHand.addMeld(proximity: 2);
             mediumHand.addMeld(proximity: 2);
 			return mediumHand;
 		}
-        if (random < 36) { // 23456 - 20
+        if (random < 34) { // 23456 - 20
             var mediumHand = buildHandFromTemplate("23456");
             mediumHand.addPair(proximity: 2);
             mediumHand.addMeld(proximity: 2);
             mediumHand.addMeld(proximity: 2);
 			return mediumHand;
 		}
-        if (random < 44) { // 23456789 - 8
+        if (random < 42) { // 23456789 - 8
             var mediumHand = buildHandFromTemplate("23456789");
             mediumHand.addPair(proximity: 2);
             mediumHand.addMeld(proximity: 2);
 			return mediumHand;
 		}
-        if (random < 48) { // ambiguous 7 pairs? - 4
+        if (random < 48) { // ambiguous 7 pairs? - 6
             var mediumHand = buildHandFromTemplate("22334");
             mediumHand.addIippeiko(proximity: 2);
             mediumHand.addPair(proximity: 2);
@@ -977,28 +1012,28 @@ public class mahjongQuiz : MonoBehaviour
             mediumHand.addPair(proximity: 2);
 			return mediumHand;
 		}
-        if (random < 66) { // 2223 - 13
+        if (random < 65) { // 2223 - 12
             var mediumHand = buildHandFromTemplate("2223");
             mediumHand.addMeld(proximity: 2);
             mediumHand.addMeld(proximity: 2);
             mediumHand.addMeld(proximity: 2);
 			return mediumHand;
 		}
-        if (random < 79) { // 2224 - 13
+        if (random < 77) { // 2224 - 12
             var mediumHand = buildHandFromTemplate("2224");
             mediumHand.addMeld(proximity: 3);
             mediumHand.addMeld(proximity: 3);
             mediumHand.addMeld(proximity: 3);
 			return mediumHand;
 		}
-        if (random < 93) { // 2345 - 14
+        if (random < 89) { // 2345 - 12
             var mediumHand = buildHandFromTemplate("2345");
             mediumHand.addMeld(proximity: 3);
             mediumHand.addMeld(proximity: 3);
             mediumHand.addMeld(proximity: 3);
 			return mediumHand;
 		}
-        else { // 1 sided kokushi - 7
+        else { // 1 sided kokushi - 11
 			var mediumHand = buildKokushiHand(1);
 			return mediumHand;
 		}
@@ -1092,6 +1127,7 @@ public class mahjongQuiz : MonoBehaviour
 		}
     }
 
+    // add two melds. If on difficulty level 3 the first meld should use the same suit as the template hand
     public void addHardMelds(Hand hand) {
         if (difficulty == 3) {
             Suit suit = hand.tiles[0].suit;
@@ -1102,7 +1138,6 @@ public class mahjongQuiz : MonoBehaviour
         hand.addMeld(proximity: 1);
     }
 
-    // add two melds. If on difficulty level 3 the first meld should use the same suit as the template hand
     public Hand buildExpertHand() {
         int random = Random.Range(0, 100);
         if (random < 5) { // 9 sided wait, usually 9 gates
@@ -1128,6 +1163,25 @@ public class mahjongQuiz : MonoBehaviour
             }
 			return hardHand;
 		}
+    }
+
+    public Hand buildSpecialHand() {
+        int random = Random.Range(0, 100);
+        if (random < 20) { // big wheel
+            return buildBigWheelHand();
+		}
+        if (random < 40) { // kokushi 1 sided
+            return buildKokushiHand(1);
+		}
+        if (random < 60) { // kokushi 13 sided
+            return buildKokushiHand(13);
+		}
+        if (random < 80) { // kokushi noten
+            return buildKokushiHand(0);
+		}
+        else { // all green
+            return buildAllGreenHand();
+        }            
     }
 
     public static List<string> expertTemplates = new List<string> {
@@ -1194,7 +1248,7 @@ public class mahjongQuiz : MonoBehaviour
     };
 	
     // creates a random Hand based on a string template where all characters in the string are digits from 1-9
-	public static Hand buildHandFromTemplate(string template) {
+	public static Hand buildHandFromTemplate(string template, bool useExact = false) {
 		var characters = template.ToArray().ToList();
 		if (characters.Any(s => !char.IsDigit(s))) throw new System.Exception("not all characters in template are digits");
 		List<int> numbers = new List<int>();
@@ -1204,28 +1258,30 @@ public class mahjongQuiz : MonoBehaviour
 		if (numbers.Any(n => n == 0)) throw new System.Exception("template string cannot contain 0's");
 		if (numbers.Any(n => numbers.Where(x => x == n).Count() > 4)) throw new System.Exception("template cannot have more than 4 of the same tile");
 
-		// shove all values to the left (ie. 44456 -> 11123) so they can be reliably and similarly manipulated
-		int minimum = numbers.Min();
-		if (minimum != 1) {
-			for (int i = 0; i < numbers.Count; i++) {
-				numbers[i] = numbers[i] - minimum + 1;
-			}
-		}
+        if (!useExact) {
+            // shove all values to the left (ie. 44456 -> 11123) so they can be reliably and similarly manipulated
+            int minimum = numbers.Min();
+            if (minimum != 1) {
+                for (int i = 0; i < numbers.Count; i++) {
+                    numbers[i] = numbers[i] - minimum + 1;
+                }
+            }
 
-		// randomly shift the hand (25% chance to be on the edge, 75% to be central)
-		// 50% chance to flip the tiles (ie. 1123 -> 7899)
-		int move;
-		int moveroom = 9 - numbers.Max();
-		int edgeChance = Random.Range(0, 4);
-		if (edgeChance == 0 || moveroom == 0) { // if the template spans 1-9, it should always be on the edge
-			var leftEdgeChance = Random.Range(0,2);
-			move = leftEdgeChance == 0 ? 0 : moveroom; // move amount is 0 or the maximum possible move room
-		} else move = Random.Range(1, moveroom);
-		var flipChance = Random.Range(0,2);
-		for (int i = 0; i < numbers.Count; i++) {
-			numbers[i] = numbers[i] + move;
-			if (flipChance == 0) numbers[i] = 10 - numbers[i];
-		}
+            // randomly shift the hand (25% chance to be on the edge, 75% to be central)
+            // 50% chance to flip the tiles (ie. 1123 -> 7899)
+            int move;
+            int moveroom = 9 - numbers.Max();
+            int edgeChance = Random.Range(0, 4);
+            if (edgeChance == 0 || moveroom == 0) { // if the template spans 1-9, it should always be on the edge
+                var leftEdgeChance = Random.Range(0,2);
+                move = leftEdgeChance == 0 ? 0 : moveroom; // move amount is 0 or the maximum possible move room
+            } else move = Random.Range(1, moveroom);
+            var flipChance = Random.Range(0,2);
+            for (int i = 0; i < numbers.Count; i++) {
+                numbers[i] = numbers[i] + move;
+                if (flipChance == 0) numbers[i] = 10 - numbers[i];
+            }
+        }
 
 		// pick random suit
 		Suit suit = (Suit) Random.Range(0,3);
@@ -1280,6 +1336,25 @@ public class mahjongQuiz : MonoBehaviour
 		}
     }
 
+    public Hand buildAllGreenHand() {
+        var allGreenHand = new Hand(new List<Tile>());
+        allGreenHand.addPair(usableTiles: allGreenTiles);
+        allGreenHand.addMeld(usableTiles: allGreenTiles);
+        allGreenHand.addMeld(usableTiles: allGreenTiles);
+        allGreenHand.addMeld(usableTiles: allGreenTiles);
+        allGreenHand.addMeld(usableTiles: allGreenTiles);
+		int randomTileIndex = Random.Range(0, 14);
+		allGreenHand.tiles.RemoveAt(randomTileIndex);
+		return allGreenHand;
+    }
+
+    public Hand buildBigWheelHand() {
+        var bigWheelHand = buildHandFromTemplate("22334455667788", useExact: true);
+	    int randomTileIndex = Random.Range(0, 14);
+	    bigWheelHand.tiles.RemoveAt(randomTileIndex);
+        return bigWheelHand;
+    }
+
     public Hand buildNotenPurityHand() {
         var purityHand = buildPurityHand();
         var looking = true;
@@ -1300,11 +1375,11 @@ public class mahjongQuiz : MonoBehaviour
             }
             var index1ToReplaceWith = Random.Range(0, allTerminals.Count);
             while (index1ToReplaceWith == index1ToReplace || index1ToReplaceWith == index2ToReplace ) {
-                index2ToReplace = Random.Range(0, allTerminals.Count);
+                index1ToReplaceWith = Random.Range(0, allTerminals.Count);
             }
             var index2ToReplaceWith = Random.Range(0, allTerminals.Count);
             while (index2ToReplaceWith == index1ToReplace || index2ToReplaceWith == index2ToReplace || index2ToReplaceWith == index1ToReplaceWith) {
-                index2ToReplace = Random.Range(0, allTerminals.Count);
+                index2ToReplaceWith = Random.Range(0, allTerminals.Count);
             }
 			tiles[index1ToReplace] = allTerminals[index1ToReplaceWith];
 			tiles[index2ToReplace] = allTerminals[index2ToReplaceWith];
